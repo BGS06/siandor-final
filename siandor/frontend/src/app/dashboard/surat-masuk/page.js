@@ -37,21 +37,28 @@ export default function SuratMasukPage() {
       if (!res.ok) throw new Error();
       const data = await res.json();
       
-      const formattedData = data.map(item => ({
-        id: item.id,
-        agenda: item.no_agenda,
-        jenis: item.jenis_surat,
-        asal: item.nama_pemohon,
-        perihal: item.perihal,
-        nik: item.nik || "-",
-        no: item.no_surat_asli || "-",
-        tgl: item.tanggal,
-        disp: item.disposisi,
-        status: item.status,
-        file_path: item.file_path,
-        tipe: item.jenis_surat.toLowerCase().includes("keluar") ? "keluar" : "masuk"
-      }));
+      const formattedData = data.map(item => {
+        const jenisLower = item.jenis_surat.toLowerCase();
+        const kataKunciKeluar = ["keluar", "keterangan", "pengantar", "rekomendasi"];
+        const isKeluar = kataKunciKeluar.some(kata => jenisLower.includes(kata));
 
+        return {
+          id: item.id,
+          agenda: item.no_agenda,
+          jenis: item.jenis_surat,
+          asal: item.nama_pemohon,
+          perihal: item.perihal,
+          nik: item.nik || "-",
+          no: item.no_surat_asli || "-",
+          tgl: item.tanggal,
+          disp: item.disposisi,
+          status: item.status,
+          file_path: item.file_path,
+          tipe: isKeluar ? "keluar" : "masuk"
+        };
+      });
+
+      // FILTER INVERSE: Hanya tampilkan yang tipe === "masuk"
       setSuratData(formattedData.filter(s => s.tipe === "masuk"));
     } catch {
       setSuratData([]); 

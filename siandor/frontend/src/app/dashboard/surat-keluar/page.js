@@ -39,8 +39,7 @@ export default function SuratKeluarPage() {
       
       const formattedData = data.map(item => {
         const jenisLower = item.jenis_surat.toLowerCase();
-        // LOGIKA BARU: Jika ada kata "keluar", "keterangan", "pengantar", "rekomendasi", dll, maka masuk Surat Keluar
-        const kataKunciKeluar = ["keluar", "keterangan", "pengantar", "rekomendasi", "keputusan", "pemberitahuan", "undangan"];
+        const kataKunciKeluar = ["keluar", "keterangan", "pengantar", "rekomendasi"];
         const isKeluar = kataKunciKeluar.some(kata => jenisLower.includes(kata));
 
         return {
@@ -59,7 +58,6 @@ export default function SuratKeluarPage() {
         };
       });
 
-      // Filter hanya tampilkan yang tipe-nya "keluar"
       setSuratData(formattedData.filter(s => s.tipe === "keluar"));
     } catch {
       setSuratData([]); 
