@@ -39,6 +39,9 @@ export default function DashboardLayout({ children }) {
     no_surat_asli: "", tanggal: "", status: "Proses", disposisi: "Kepala Desa",
   });
 
+  // STATE BARU: Untuk menyimpan pilihan kategori halaman
+  const [kategoriSurat, setKategoriSurat] = useState("Masuk");
+
   const [filePendukung, setFilePendukung] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -67,6 +70,7 @@ export default function DashboardLayout({ children }) {
     setFilePendukung(null);
     setIsDragging(false);
     setFormData({ jenis_surat: "", nama_pemohon: "", nik: "", perihal: "", no_surat_asli: "", tanggal: "", status: "Proses", disposisi: "Kepala Desa" });
+    setKategoriSurat("Masuk"); // RESET CATEGORY
   };
 
   const handleSubmit = async () => {
@@ -79,10 +83,14 @@ export default function DashboardLayout({ children }) {
     const dateCode = new Date().toISOString().slice(0,10).replace(/-/g,""); 
     const randomCode = Math.floor(1000 + Math.random() * 9000); 
     const generatedAgenda = `AGD-${dateCode}-${randomCode}`;
-
+    
     const dataToSend = new FormData();
     dataToSend.append("no_agenda", generatedAgenda); 
-    dataToSend.append("jenis_surat", formData.jenis_surat);
+
+    // LOGIKA TAG PINTAR DITERAPKAN DI SINI
+    const finalJenisSurat = kategoriSurat === "Keluar" ? `[KELUAR] ${formData.jenis_surat}` : `[MASUK] ${formData.jenis_surat}`;
+    dataToSend.append("jenis_surat", finalJenisSurat);
+    
     dataToSend.append("nama_pemohon", formData.nama_pemohon);
     dataToSend.append("nik", formData.nik);
     dataToSend.append("perihal", formData.perihal);
@@ -384,6 +392,21 @@ export default function DashboardLayout({ children }) {
                     </select>
                   </div>
                 </div>
+
+                {/* UI DROPDOWN BARU DITAMBAHKAN DI SINI */}
+                <div className="mt-4 pt-4 border-t border-border">
+                  <label className="text-sm font-semibold text-hitam mb-1.5 block">Simpan Ke Halaman <span className="text-merah">*</span></label>
+                  <select 
+                    value={kategoriSurat} 
+                    onChange={(e) => setKategoriSurat(e.target.value)} 
+                    className="w-full p-3 border-border border rounded-xl text-sm font-bold text-hijau-tua outline-none focus:border-hijau focus:ring-2 focus:ring-hijau/20 bg-latar cursor-pointer transition"
+                  >
+                    <option value="Masuk">📥 Simpan sebagai Surat Masuk</option>
+                    <option value="Keluar">📤 Simpan sebagai Surat Keluar</option>
+                  </select>
+                  <p className="text-xs text-abu mt-1.5">Pilih di halaman mana surat ini akan ditampilkan.</p>
+                </div>
+
               </div>
 
               <div className="p-5 lg:p-6 border-t border-border flex justify-end gap-3 shrink-0">

@@ -30,22 +30,34 @@ export default function SuratKeluarPage() {
     try {
       const res = await fetch(`${BACKEND}/api/surat`, { 
         cache: "no-store",
-        headers: {
-          "ngrok-skip-browser-warning": "69420"
-        }
+        headers: { "ngrok-skip-browser-warning": "69420" }
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
       
       const formattedData = data.map(item => {
-        const jenisLower = item.jenis_surat.toLowerCase();
-        const kataKunciKeluar = ["keluar", "keterangan", "pengantar", "rekomendasi"];
-        const isKeluar = kataKunciKeluar.some(kata => jenisLower.includes(kata));
+        const rawJenis = item.jenis_surat || "";
+        const jenisLower = rawJenis.toLowerCase();
+        
+        // LOGIKA TAG PINTAR: Mengecek tag dari dropdown form
+        let tipe = "masuk";
+        if (jenisLower.includes("[keluar]")) {
+          tipe = "keluar";
+        } else if (jenisLower.includes("[masuk]")) {
+          tipe = "masuk";
+        } else {
+          // Fallback untuk data lama yang belum pakai dropdown
+          const kataKunciKeluar = ["keluar", "keterangan", "pengantar", "rekomendasi"];
+          tipe = kataKunciKeluar.some(kata => jenisLower.includes(kata)) ? "keluar" : "masuk";
+        }
+
+        // Membersihkan teks jenis surat agar tag [KELUAR]/[MASUK] tidak terlihat di tabel
+        const cleanJenis = rawJenis.replace(/\[KELUAR\]\s?/gi, "").replace(/\[MASUK\]\s?/gi, "");
 
         return {
           id: item.id,
           agenda: item.no_agenda,
-          jenis: item.jenis_surat,
+          jenis: cleanJenis, // Menggunakan teks yang sudah dibersihkan
           asal: item.nama_pemohon,
           perihal: item.perihal,
           nik: item.nik || "-",
@@ -54,10 +66,11 @@ export default function SuratKeluarPage() {
           disp: item.disposisi,
           status: item.status,
           file_path: item.file_path,
-          tipe: isKeluar ? "keluar" : "masuk"
+          tipe: tipe
         };
       });
 
+      // FILTER HANYA SURAT KELUAR
       setSuratData(formattedData.filter(s => s.tipe === "keluar"));
     } catch {
       setSuratData([]); 
@@ -76,7 +89,6 @@ export default function SuratKeluarPage() {
         <div className="w-full h-[200px] bg-latar rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center text-abu">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mb-2 text-border"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           <p className="font-bold text-hitam text-sm">Tidak Ada File</p>
-          <p className="text-xs mt-1 text-abu">Dokumen tidak diupload saat input</p>
         </div>
       );
     }
@@ -142,12 +154,7 @@ export default function SuratKeluarPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                <tr><td colSpan="10" className="py-10 text-center text-sm text-abu">
-                  <div className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin text-hijau" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                    Memuat data...
-                  </div>
-                </td></tr>
+                <tr><td colSpan="10" className="py-10 text-center text-sm text-abu">Memuat data...</td></tr>
               ) : filteredData.length > 0 ? filteredData.map((item, i) => (
                 <tr key={`${item.id}-${i}`} className="hover:bg-latar transition-colors">
                   <td className="py-4 px-4 font-bold text-hijau-tua whitespace-nowrap">{item.agenda}</td>
@@ -159,18 +166,14 @@ export default function SuratKeluarPage() {
                   <td className="py-4 px-4 font-semibold whitespace-nowrap">{item.tgl}</td>
                   <td className="py-4 px-4">{item.disp}</td>
                   <td className="py-4 px-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${item.status === "Selesai" ? "bg-hijau-pale text-hijau-tua" : "bg-emas-pale text-[#7A5400]"}`}>
-                      {item.status}
-                    </span>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${item.status === "Selesai" ? "bg-hijau-pale text-hijau-tua" : "bg-emas-pale text-[#7A5400]"}`}>{item.status}</span>
                   </td>
                   <td className="py-4 px-4 text-center">
                     <button onClick={() => setSelectedSurat(item)} className="text-biru text-sm font-bold hover:underline cursor-pointer">Lihat</button>
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan="10" className="py-10 text-center text-sm font-medium text-abu">
-                  {searchTerm ? `Tidak ada surat yang cocok dengan "${searchTerm}".` : "Belum ada data surat keluar."}
-                </td></tr>
+                <tr><td colSpan="10" className="py-10 text-center text-sm font-medium text-abu">Belum ada data surat keluar.</td></tr>
               )}
             </tbody>
           </table>
@@ -185,35 +188,18 @@ export default function SuratKeluarPage() {
                 <h2 className="text-lg font-bold text-hitam">Detail Dokumen</h2>
                 <p className="text-sm font-bold text-hijau-tua mt-0.5">{selectedSurat.agenda}</p>
               </div>
-              <button onClick={() => setSelectedSurat(null)} className="w-7 h-7 rounded-md border border-border flex items-center justify-center hover:bg-white bg-latar cursor-pointer transition text-abu">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
+              <button onClick={() => setSelectedSurat(null)} className="w-7 h-7 rounded-md border border-border flex items-center justify-center hover:bg-white bg-latar cursor-pointer transition text-abu">X</button>
             </div>
-
             <div className="p-5 space-y-4 overflow-y-auto flex-1">
               {renderPreview(selectedSurat)}
               <div className="bg-latar border border-border rounded-xl p-4 space-y-2.5 text-sm">
-                {[
-                  ["Tujuan Surat", selectedSurat.asal],
-                  ["Perihal", selectedSurat.perihal],
-                  ["No. Surat", selectedSurat.no],
-                  ["Tanggal", selectedSurat.tgl],
-                  ["Disposisi", selectedSurat.disp],
-                ].map(([label, val]) => (
-                  <div key={label} className="flex justify-between gap-4">
-                    <span className="text-abu font-medium shrink-0">{label}:</span>
-                    <span className="font-bold text-hitam text-right">{val}</span>
-                  </div>
-                ))}
-                <div className="flex justify-between items-center gap-4">
-                  <span className="text-abu font-medium shrink-0">Status:</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${selectedSurat.status === "Selesai" ? "bg-hijau-pale text-hijau-tua" : "bg-emas-pale text-[#7A5400]"}`}>
-                    {selectedSurat.status}
-                  </span>
-                </div>
+                <div className="flex justify-between gap-4"><span className="text-abu font-medium shrink-0">Tujuan Surat:</span><span className="font-bold text-hitam text-right">{selectedSurat.asal}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-abu font-medium shrink-0">Perihal:</span><span className="font-bold text-hitam text-right">{selectedSurat.perihal}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-abu font-medium shrink-0">No. Surat:</span><span className="font-bold text-hitam text-right">{selectedSurat.no}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-abu font-medium shrink-0">Tanggal:</span><span className="font-bold text-hitam text-right">{selectedSurat.tgl}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-abu font-medium shrink-0">Disposisi:</span><span className="font-bold text-hitam text-right">{selectedSurat.disp}</span></div>
               </div>
             </div>
-
             <div className="px-5 py-4 border-t border-border flex justify-end gap-3 bg-latar rounded-b-2xl shrink-0">
               <button onClick={() => setSelectedSurat(null)} className="px-4 py-2 border-2 border-border text-hitam rounded-lg font-bold text-xs hover:bg-white transition cursor-pointer">Tutup</button>
               <button onClick={() => window.print()} className="px-4 py-2 bg-white border border-border text-hitam rounded-lg font-bold text-xs hover:bg-latar shadow-sm transition cursor-pointer">Cetak</button>
