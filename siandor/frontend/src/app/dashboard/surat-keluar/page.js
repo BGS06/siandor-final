@@ -37,21 +37,29 @@ export default function SuratKeluarPage() {
       if (!res.ok) throw new Error();
       const data = await res.json();
       
-      const formattedData = data.map(item => ({
-        id: item.id,
-        agenda: item.no_agenda,
-        jenis: item.jenis_surat,
-        asal: item.nama_pemohon,
-        perihal: item.perihal,
-        nik: item.nik || "-",
-        no: item.no_surat_asli || "-",
-        tgl: item.tanggal,
-        disp: item.disposisi,
-        status: item.status,
-        file_path: item.file_path,
-        tipe: item.jenis_surat.toLowerCase().includes("keluar") ? "keluar" : "masuk"
-      }));
+      const formattedData = data.map(item => {
+        const jenisLower = item.jenis_surat.toLowerCase();
+        // LOGIKA BARU: Jika ada kata "keluar", "keterangan", "pengantar", "rekomendasi", dll, maka masuk Surat Keluar
+        const kataKunciKeluar = ["keluar", "keterangan", "pengantar", "rekomendasi", "keputusan", "pemberitahuan", "undangan"];
+        const isKeluar = kataKunciKeluar.some(kata => jenisLower.includes(kata));
 
+        return {
+          id: item.id,
+          agenda: item.no_agenda,
+          jenis: item.jenis_surat,
+          asal: item.nama_pemohon,
+          perihal: item.perihal,
+          nik: item.nik || "-",
+          no: item.no_surat_asli || "-",
+          tgl: item.tanggal,
+          disp: item.disposisi,
+          status: item.status,
+          file_path: item.file_path,
+          tipe: isKeluar ? "keluar" : "masuk"
+        };
+      });
+
+      // Filter hanya tampilkan yang tipe-nya "keluar"
       setSuratData(formattedData.filter(s => s.tipe === "keluar"));
     } catch {
       setSuratData([]); 
