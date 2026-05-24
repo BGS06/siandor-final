@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-const BACKEND = "https://d30d-140-213-187-76.ngrok-free.app";
+const BACKEND = "https://3cfe-140-213-187-76.ngrok-free.app";
 
 export default function PenyimpananArsipPage() {
   const [semuaArsip, setSemuaArsip] = useState([]);
