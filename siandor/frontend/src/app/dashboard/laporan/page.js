@@ -84,14 +84,16 @@ export default function LaporanPage() {
 
   const handleBackup = async () => {
     try {
-      const res = await fetch(`${BACKEND}/arsip/backup?provider=drive`, { 
+      // MENGGUNAKAN ENDPOINT ASLI YANG ADA DI INDEX.PY
+      const res = await fetch(`${BACKEND}/api/surat/export/sheets`, { 
         method: "POST",
         headers: { "ngrok-skip-browser-warning": "69420" }
       });
+      
       if (res.ok) {
-        alert("✅ Backup ke Google Drive berhasil!");
+        alert("✅ Sinkronisasi Backup ke Google Spreadsheet berhasil!");
       } else {
-        alert("❌ Gagal melakukan backup.");
+        alert("❌ Gagal melakukan backup. Pastikan kredensial aktif.");
       }
     } catch (error) {
       alert("Terjadi kesalahan jaringan saat melakukan backup.");
