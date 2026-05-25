@@ -2,7 +2,7 @@
 import { useState, useEffect, useContext } from "react";
 import { ModalContext } from "../layout";
 
-const BACKEND = "https://3cfe-140-213-187-76.ngrok-free.app";
+const BACKEND = "https://0c9f-140-213-187-76.ngrok-free.app";
 
 export default function SuratMasukPage() {
   const [suratData, setSuratData] = useState([]);
