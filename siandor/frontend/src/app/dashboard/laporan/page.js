@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-const BACKEND = "https://0c9f-140-213-187-76.ngrok-free.app";
+const BACKEND = "https://84ae-118-99-84-100.ngrok-free.app";
 
 export default function LaporanPage() {
   const [statsData, setStatsData] = useState([]);
